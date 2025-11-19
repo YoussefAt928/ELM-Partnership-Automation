@@ -1,0 +1,32 @@
+name: Deploy to Test
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Test Server
+        run: |
+          rsync -avz --delete \
+            --exclude ".env" \
+            --exclude "vendor" \
+            --exclude "node_modules" \
+            ./ root@192.168.1.119:/var/www/test/current/
+
+          ssh root@192.168.1.119 "cd /var/www/test/current && composer install --no-interaction --prefer-dist"
+
+          ssh root@192.168.1.119 "cd /var/www/test/current && php artisan migrate --force"
+
+          ssh root@192.168.1.119 "cd /var/www/test/current && php artisan config:clear && php artisan route:clear && php artisan cache:clear"
+
+          ssh root@192.168.1.119 "chown -R nginx:nginx /var/www/test/current && chmod -R 775 /var/www/test/current/storage /var/www/test/current/bootstrap/cache"
+
+          ssh root@192.168.1.119 "systemctl restart php-fpm && systemctl restart nginx"
