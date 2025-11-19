@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رفع ملف CS2V</title>
+    <title>رفع ملف CS23V</title>
     <style>
         body {
             font-family: Arial, sans-serif;
