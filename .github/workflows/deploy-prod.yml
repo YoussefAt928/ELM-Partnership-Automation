@@ -66,4 +66,5 @@ jobs:
 
       - name: Keep last 2 releases
         run: |
-          ssh root@192.168.1.192 "cd /var/www/prod/releases && ls -1t | tail -n +3 | xargs -I {} rm -rf {}"
+          ssh root@192.168.1.192 "cd /var/www/prod/releases && ls -1t | tail -n +4 | xargs -I {} rm -rf {}
+"
