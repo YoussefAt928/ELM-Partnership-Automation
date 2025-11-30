@@ -1,4 +1,4 @@
-name: Deploy to Production1
+name: Deploy to Production (Releases)
 
 on:
   push:
@@ -13,20 +13,55 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Production Server
+      - name: Set Release Timestamp
+        id: vars
+        run: echo "release=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_OUTPUT
+
+      - name: Prepare release directory
+        run: |
+          ssh root@192.168.1.192 "mkdir -p /var/www/prod/releases/${{ steps.vars.outputs.release }}"
+          ssh root@192.168.1.192 "mkdir -p /var/www/prod/shared/storage"
+          ssh root@192.168.1.192 "mkdir -p /var/www/prod/shared/bootstrap/cache"
+
+      - name: Upload application code to release
         run: |
           rsync -avz --delete \
             --exclude ".env" \
             --exclude "vendor" \
             --exclude "node_modules" \
-            ./ root@192.168.1.192:/var/www/prod/current/
+            ./ root@192.168.1.192:/var/www/prod/releases/${{ steps.vars.outputs.release }}/
 
-          ssh root@192.168.1.192 "cd /var/www/prod/current && composer install --no-interaction --prefer-dist --no-dev"
+      - name: Symlink shared storage and .env
+        run: |
+          ssh root@192.168.1.192 "ln -nfs /var/www/prod/shared/.env /var/www/prod/releases/${{ steps.vars.outputs.release }}/.env"
+          ssh root@192.168.1.192 "rm -rf /var/www/prod/releases/${{ steps.vars.outputs.release }}/storage"
+          ssh root@192.168.1.192 "ln -nfs /var/www/prod/shared/storage /var/www/prod/releases/${{ steps.vars.outputs.release }}/storage"
 
-          ssh root@192.168.1.192 "cd /var/www/prod/current && php artisan migrate --force"
+      - name: Install dependencies
+        run: |
+          ssh root@192.168.1.192 "
+            cd /var/www/prod/releases/${{ steps.vars.outputs.release }} &&
+            composer install --no-interaction --prefer-dist --no-dev
+          "
 
-          ssh root@192.168.1.192 "cd /var/www/prod/current && php artisan config:clear && php artisan route:clear && php artisan cache:clear"
+      - name: Run migrations and clear cache
+        run: |
+          ssh root@192.168.1.192 "
+            cd /var/www/prod/releases/${{ steps.vars.outputs.release }} &&
+            php artisan migrate --force &&
+            php artisan config:clear &&
+            php artisan route:clear &&
+            php artisan cache:clear
+          "
 
-          ssh root@192.168.1.192 "chown -R nginx:nginx /var/www/prod/current && chmod -R 775 /var/www/prod/current/storage /var/www/prod/current/bootstrap/cache"
+      - name: Update current symlink (switch release)
+        run: |
+          ssh root@192.168.1.192 "ln -nfs /var/www/prod/releases/${{ steps.vars.outputs.release }} /var/www/prod/current"
 
+      - name: Restart PHP-FPM & Nginx
+        run: |
           ssh root@192.168.1.192 "systemctl restart php-fpm && systemctl restart nginx"
+
+      - name: Keep last 2 releases
+        run: |
+          ssh root@192.168.1.192 "cd /var/www/prod/releases && ls -1t | tail -n +3 | xargs -I {} rm -rf {}"
