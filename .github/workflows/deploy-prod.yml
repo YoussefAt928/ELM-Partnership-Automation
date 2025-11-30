@@ -64,6 +64,6 @@ jobs:
         run: |
           ssh root@192.168.1.192 "systemctl restart php-fpm && systemctl restart nginx"
 
-      - name: Keep last 2 releases
+      - name: Keep last 3 releases
         run: |
-          ssh root@192.168.1.192 "cd /var/www/prod/releases && ls -1t | tail -n +3 | xargs -I {} rm -rf {}"
+          ssh root@192.168.1.192 "cd /var/www/prod/releases && ls -1t | tail -n +4 | xargs -I {} rm -rf {}"
