@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رفع ملف CSV</title>
+    <title>رفع ملف CS23V</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -116,7 +116,7 @@
 </head>
 
 <body>
-    <h1>رفع ملف CSV</h1>
+    <h1>رفع ملف CS123V</h1>
 
     @if (session('success'))
         <p style="color: #34c759; font-weight: bold;">{{ session('success') }}</p>
