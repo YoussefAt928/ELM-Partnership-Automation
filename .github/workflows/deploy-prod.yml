@@ -56,8 +56,10 @@ jobs:
 
       - name: Update current symlink (switch release)
         run: |
-          ssh root@192.168.1.192 "ln -nfs /var/www/prod/releases/${{ steps.vars.outputs.release }} /var/www/prod/current"
-
+          ssh root@192.168.1.192 "
+            rm -rf /var/www/prod/current &&
+            ln -nfs /var/www/prod/releases/${{ steps.vars.outputs.release }} /var/www/prod/current
+          "
       - name: Restart PHP-FPM & Nginx
         run: |
           ssh root@192.168.1.192 "systemctl restart php-fpm && systemctl restart nginx"
