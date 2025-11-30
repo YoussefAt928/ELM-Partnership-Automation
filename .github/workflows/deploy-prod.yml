@@ -1,1 +1,32 @@
-s
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production Server
+        run: |
+          rsync -avz --delete \
+            --exclude ".env" \
+            --exclude "vendor" \
+            --exclude "node_modules" \
+            ./ root@192.168.1.192:/var/www/prod/current/
+
+          ssh root@192.168.1.192 "cd /var/www/prod/current && composer install --no-interaction --prefer-dist --no-dev"
+
+          ssh root@192.168.1.192 "cd /var/www/prod/current && php artisan migrate --force"
+
+          ssh root@192.168.1.192 "cd /var/www/prod/current && php artisan config:clear && php artisan route:clear && php artisan cache:clear"
+
+          ssh root@192.168.1.192 "chown -R nginx:nginx /var/www/prod/current && chmod -R 775 /var/www/prod/current/storage /var/www/prod/current/bootstrap/cache"
+
+          ssh root@192.168.1.192 "systemctl restart php-fpm && systemctl restart nginx"
