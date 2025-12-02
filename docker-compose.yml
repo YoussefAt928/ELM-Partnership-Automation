@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ghcr.io/youssefat928/elm-partnershipautomation-app
     container_name: laravel_app
     volumes:
       - .:/var/www/html
