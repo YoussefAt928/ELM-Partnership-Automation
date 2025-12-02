@@ -65,7 +65,7 @@ jobs:
       # This keeps your VM copy of the project (compose, nginx config, etc.) updated
       - name: Sync project to Test server
         run: |
-          rsync -avz ./ root@192.168.1.127:/var/www/elm-partnershipautomation/
+          rsync -avz --exclude ".env" ./ root@192.168.1.127:/var/www/elm-partnershipautomation/
 
       - name: Deploy containers on Test server
         run: |
