@@ -5,6 +5,10 @@ on:
     branches:
       - dev
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/youssefat928/elm-partnershipautomation-app
